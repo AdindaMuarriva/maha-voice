@@ -4,6 +4,7 @@ import SplashScreen from './pages/auth/SplashScreen';
 import Onboarding from './pages/auth/Onboarding';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import Dashboard from './pages/mahasiswa/Dashboard';
 
 function App() {
   const [currentStep, setCurrentStep] = useState('splash');
@@ -28,7 +29,7 @@ function App() {
         <Login 
           onRegisterClick={() => setCurrentStep('register')} 
           onLogin={() => {
-            alert("Berhasil Login!");
+            setCurrentStep('dashboard');
           }} 
         />
       )}
@@ -39,6 +40,11 @@ function App() {
           onLoginClick={() => setCurrentStep('login')} 
           onRegister={() => setCurrentStep('login')} 
         />
+      )}
+
+      {/* 5. Dashboard */}
+      {currentStep === 'dashboard' && (
+        <Dashboard />
       )}
     </MobileContainer>
   );
