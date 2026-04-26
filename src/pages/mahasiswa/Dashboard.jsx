@@ -311,12 +311,12 @@ const Dashboard = ({ userName = 'Adinda Muarriva', onFeatureClick, onProfileClic
             </div>
 
           {/* ════ SCREENING CARD ════ */}
-            <div style={{ padding: '0 20px', marginBottom: 24 }}>
+            <div style={{ padding: '0 20px', marginBottom: 22, marginTop: 10 }}>
               <div style={{
                 borderRadius: 22,
                 background: 'linear-gradient(130deg, #50A1C1 0%, #264C5B 100%)',
                 boxShadow: '0 10px 28px rgba(38,76,91,0.35)',
-                padding: '20px',
+                padding: '15px',
                 position: 'relative',
                 overflow: 'visible',
                 minHeight: 150,
@@ -358,7 +358,7 @@ const Dashboard = ({ userName = 'Adinda Muarriva', onFeatureClick, onProfileClic
                   alt="robot"
                   style={{
                     position: 'absolute',
-                    right: -5,
+                    right: -2,
                     bottom: -20,
                     width: 120,
                     height: 'auto',
