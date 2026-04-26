@@ -5,6 +5,7 @@ import Onboarding from './pages/auth/Onboarding';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Dashboard from './pages/mahasiswa/Dashboard';
+import Chatbox from './pages/mahasiswa/Chatbox';
 
 function App() {
   const [currentStep, setCurrentStep] = useState('splash');
@@ -42,10 +43,23 @@ function App() {
         />
       )}
 
-      {/* 5. Dashboard */}
-      {currentStep === 'dashboard' && (
-        <Dashboard />
-      )}
+    {/* 5. Dashboard */}
+    {currentStep === 'dashboard' && (
+      <Dashboard
+        onFeatureClick={(feature) => {
+          if (feature === 'chat') {
+            setCurrentStep('chat');
+          }
+        }}
+      />
+    )}
+
+    {/* 6. Chat */}
+    {currentStep === 'chat' && (
+      <Chatbox 
+        onBack={() => setCurrentStep('dashboard')} 
+      />
+    )}
     </MobileContainer>
   );
 }
