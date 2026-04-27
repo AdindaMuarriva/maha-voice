@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import authBg from '../../assets/authbg.png';
+import { loginUser } from '../../services/authApi';
 
 const Login = ({ onLogin, onRegisterClick }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+    if (apiError) setApiError('');
   };
 
   const validateForm = () => {
@@ -21,12 +24,21 @@ const Login = ({ onLogin, onRegisterClick }) => {
     return e;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validateForm();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setIsLoading(true);
-    setTimeout(() => { setIsLoading(false); onLogin?.(formData); }, 1200);
+    setApiError('');
+
+    try {
+      const result = await loginUser(formData);
+      onLogin?.(result);
+    } catch (error) {
+      setApiError(error.message || 'Login gagal');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -142,6 +154,12 @@ const Login = ({ onLogin, onRegisterClick }) => {
           <button type="submit" className="login-btn">
             {isLoading ? 'Loading...' : 'Masuk'}
           </button>
+
+          {apiError && (
+            <p style={{ margin: 0, fontSize: 12, color: '#b91c1c', fontWeight: 600 }}>
+              {apiError}
+            </p>
+          )}
         </form>
 
         {/* Register */}
