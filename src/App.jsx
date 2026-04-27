@@ -10,10 +10,26 @@ import Screening from './pages/mahasiswa/Screening';
 import Result from './pages/mahasiswa/Result';
 import Musik from './pages/mahasiswa/Musik';
 import Riwayat from './pages/mahasiswa/Riwayat';
+import AdminLogin from './pages/admin/AdminLogin';
 
 function App() {
-  const [currentStep, setCurrentStep] = useState('splash');
+  const [currentStep, setCurrentStep] = useState('admin-login');
   const [score, setScore] = useState(0);
+
+  if (currentStep?.startsWith('admin')) {
+    return (
+      <div className="w-full h-screen">
+        {currentStep === 'admin-login' && (
+          <AdminLogin onAdminLogin={() => setCurrentStep('admin-dashboard')} />
+        )}
+        {currentStep === 'admin-dashboard' && (
+          <div className="flex items-center justify-center h-full text-4xl font-bold text-[#3C7A92]">
+            Dashboard Admin MahaVoice
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <MobileContainer>
