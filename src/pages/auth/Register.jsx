@@ -1,40 +1,55 @@
 import { useState } from 'react';
 import authBg from '../../assets/authbg.png';
+import { registerUser } from '../../services/authApi';
 
 const Register = ({ onRegister, onLoginClick }) => {
   const [formData, setFormData] = useState({
-    fullName: '',
+    nama: '',
     npm: '',
     email: '',
     password: '',
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState('');
+  const [apiSuccess, setApiSuccess] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+    if (apiError) setApiError('');
+    if (apiSuccess) setApiSuccess('');
   };
 
   const validateForm = () => {
     const e = {};
-    if (!formData.fullName.trim()) e.fullName = 'Nama wajib diisi';
+    if (!formData.nama.trim()) e.nama = 'Nama wajib diisi';
     if (!formData.npm.trim()) e.npm = 'NPM wajib diisi';
     if (!formData.email.trim()) e.email = 'Email wajib diisi';
     if (!formData.password) e.password = 'Password wajib diisi';
     return e;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validateForm();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+
     setIsLoading(true);
-    setTimeout(() => {
+    setApiError('');
+    setApiSuccess('');
+
+    try {
+      const result = await registerUser(formData);
+      setApiSuccess(result.message || 'Registrasi berhasil');
       setIsLoading(false);
-      onRegister?.(formData);
-    }, 1200);
+
+      onRegister?.(result.user);
+    } catch (error) {
+      setApiError(error.message || 'Registrasi gagal');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -129,8 +144,8 @@ const Register = ({ onRegister, onLoginClick }) => {
             </label>
             <input
               type="text"
-              name="fullName"
-              value={formData.fullName}
+              name="nama"
+              value={formData.nama}
               onChange={handleChange}
               className="register-input"
             />
@@ -182,6 +197,18 @@ const Register = ({ onRegister, onLoginClick }) => {
           >
             {isLoading ? 'Loading...' : 'Daftar'}
           </button>
+
+          {apiError && (
+            <p style={{ margin: 0, fontSize: 12, color: '#b91c1c', fontWeight: 600 }}>
+              {apiError}
+            </p>
+          )}
+
+          {apiSuccess && (
+            <p style={{ margin: 0, fontSize: 12, color: '#0f766e', fontWeight: 600 }}>
+              {apiSuccess}
+            </p>
+          )}
         </form>
 
         {/* Login */}
