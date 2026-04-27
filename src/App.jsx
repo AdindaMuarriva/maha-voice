@@ -8,6 +8,8 @@ import Dashboard from './pages/mahasiswa/Dashboard';
 import Chatbox from './pages/mahasiswa/Chatbox';
 import Screening from './pages/mahasiswa/Screening';
 import Result from './pages/mahasiswa/Result';
+import Musik from './pages/mahasiswa/Musik';
+import Riwayat from './pages/mahasiswa/Riwayat';
 
 function App() {
   const [currentStep, setCurrentStep] = useState('splash');
@@ -15,12 +17,13 @@ function App() {
 
   return (
     <MobileContainer>
-      {/* 1. Splash */}
+
+      {/* SPLASH */}
       {currentStep === 'splash' && (
         <SplashScreen onFinish={() => setCurrentStep('onboarding')} />
       )}
 
-      {/* 2. Onboarding */}
+      {/* ONBOARDING */}
       {currentStep === 'onboarding' && (
         <Onboarding 
           onComplete={() => setCurrentStep('register')} 
@@ -28,17 +31,15 @@ function App() {
         />
       )}
 
-      {/* 3. Login */}
+      {/* LOGIN */}
       {currentStep === 'login' && (
         <Login 
           onRegisterClick={() => setCurrentStep('register')} 
-          onLogin={() => {
-            setCurrentStep('dashboard');
-          }} 
+          onLogin={() => setCurrentStep('dashboard')} 
         />
       )}
 
-      {/* 4. Register */}
+      {/* REGISTER */}
       {currentStep === 'register' && (
         <Register 
           onLoginClick={() => setCurrentStep('login')} 
@@ -46,45 +47,58 @@ function App() {
         />
       )}
 
-    {/* 5. Dashboard */}
-    {currentStep === 'dashboard' && (
-      <Dashboard
-        onFeatureClick={(feature) => {
-          if (feature === 'chat') {
-            setCurrentStep('chat');
-          }
-          if (feature === 'screening') {
-            setCurrentStep('screening');
-          }
-        }}
-      />
-    )}
+      {/* DASHBOARD */}
+      {currentStep === 'dashboard' && (
+        <Dashboard
+          onFeatureClick={(feature) => {
+            if (feature === 'chat') setCurrentStep('chat');
+            if (feature === 'screening') setCurrentStep('screening');
+            if (feature === 'music') setCurrentStep('musik');
+            if (feature === 'history') setCurrentStep('riwayat');
+          }}
+        />
+      )}
 
-    {/* 6. Chat */}
-    {currentStep === 'chat' && (
-      <Chatbox 
-        onBack={() => setCurrentStep('dashboard')} 
-      />
-    )}
+      {/* CHAT */}
+      {currentStep === 'chat' && (
+        <Chatbox 
+          onBack={() => setCurrentStep('dashboard')} 
+          onNavigate={(page) => setCurrentStep(page)}
+        />
+      )}
 
-    {/* 7. Screening */}
-    {currentStep === 'screening' && (
-      <Screening 
-        onBack={() => setCurrentStep('dashboard')} 
-        onFinish={(finalScore) => {
-          setScore(finalScore);
-          setCurrentStep('result');
-        }}
-      />
-    )}
+      {/* SCREENING */}
+      {currentStep === 'screening' && (
+        <Screening 
+          onBack={() => setCurrentStep('dashboard')} 
+          onFinish={(finalScore) => {
+            setScore(finalScore);
+            setCurrentStep('result');
+          }}
+        />
+      )}
 
-    {/* 8. Result */}
-    {currentStep === 'result' && (
-      <Result
-        score={score}
-        onBack={() => setCurrentStep('dashboard')}
-      />
-    )}
+      {/* RESULT */}
+      {currentStep === 'result' && (
+        <Result
+          score={score}
+          onBack={() => setCurrentStep('dashboard')}
+        />
+      )}
+
+      {/* MUSIK */}
+      {currentStep === 'musik' && (
+        <Musik 
+          onBack={() => setCurrentStep('dashboard')} 
+        />
+      )}
+
+      {/* RIWAYAT */}
+      {currentStep === 'riwayat' && (
+        <Riwayat 
+          onBack={() => setCurrentStep('dashboard')} 
+        />
+      )}
 
     </MobileContainer>
   );
