@@ -6,20 +6,24 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Dashboard from './pages/mahasiswa/Dashboard';
 import Chatbox from './pages/mahasiswa/Chatbox';
+import Screening from './pages/mahasiswa/Screening';
+import Result from './pages/mahasiswa/Result';
 import Musik from './pages/mahasiswa/Musik';
 import Riwayat from './pages/mahasiswa/Riwayat';
 
 function App() {
   const [currentStep, setCurrentStep] = useState('splash');
+  const [score, setScore] = useState(0);
 
   return (
     <MobileContainer>
-      {/* 1. Splash */}
+
+      {/* SPLASH */}
       {currentStep === 'splash' && (
         <SplashScreen onFinish={() => setCurrentStep('onboarding')} />
       )}
 
-      {/* 2. Onboarding */}
+      {/* ONBOARDING */}
       {currentStep === 'onboarding' && (
         <Onboarding 
           onComplete={() => setCurrentStep('register')} 
@@ -27,17 +31,15 @@ function App() {
         />
       )}
 
-      {/* 3. Login */}
+      {/* LOGIN */}
       {currentStep === 'login' && (
         <Login 
           onRegisterClick={() => setCurrentStep('register')} 
-          onLogin={() => {
-            setCurrentStep('dashboard');
-          }} 
+          onLogin={() => setCurrentStep('dashboard')} 
         />
       )}
 
-      {/* 4. Register */}
+      {/* REGISTER */}
       {currentStep === 'register' && (
         <Register 
           onLoginClick={() => setCurrentStep('login')} 
@@ -45,43 +47,59 @@ function App() {
         />
       )}
 
-      {/* 5. Dashboard */}
+      {/* DASHBOARD */}
       {currentStep === 'dashboard' && (
         <Dashboard
           onFeatureClick={(feature) => {
-            if (feature === 'chat') {
-              setCurrentStep('chat');
-            }
-            if (feature === 'music') {
-              setCurrentStep('musik');
-            }
-            if (feature === 'history') {
-              setCurrentStep('riwayat');
-            }
+            if (feature === 'chat') setCurrentStep('chat');
+            if (feature === 'screening') setCurrentStep('screening');
+            if (feature === 'music') setCurrentStep('musik');
+            if (feature === 'history') setCurrentStep('riwayat');
           }}
         />
       )}
 
-      {/* 6. Chat */}
+      {/* CHAT */}
       {currentStep === 'chat' && (
         <Chatbox 
           onBack={() => setCurrentStep('dashboard')} 
+          onNavigate={(page) => setCurrentStep(page)}
         />
       )}
 
-      {/* 7. Musik */}
+      {/* SCREENING */}
+      {currentStep === 'screening' && (
+        <Screening 
+          onBack={() => setCurrentStep('dashboard')} 
+          onFinish={(finalScore) => {
+            setScore(finalScore);
+            setCurrentStep('result');
+          }}
+        />
+      )}
+
+      {/* RESULT */}
+      {currentStep === 'result' && (
+        <Result
+          score={score}
+          onBack={() => setCurrentStep('dashboard')}
+        />
+      )}
+
+      {/* MUSIK */}
       {currentStep === 'musik' && (
         <Musik 
           onBack={() => setCurrentStep('dashboard')} 
         />
       )}
 
-      {/* 8. Riwayat */}
+      {/* RIWAYAT */}
       {currentStep === 'riwayat' && (
         <Riwayat 
           onBack={() => setCurrentStep('dashboard')} 
         />
       )}
+
     </MobileContainer>
   );
 }
