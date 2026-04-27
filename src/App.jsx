@@ -6,6 +6,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Dashboard from './pages/mahasiswa/Dashboard';
 import Chatbox from './pages/mahasiswa/Chatbox';
+import Musik from './pages/mahasiswa/Musik';         
 
 function App() {
   const [currentStep, setCurrentStep] = useState('splash');
@@ -43,23 +44,33 @@ function App() {
         />
       )}
 
-    {/* 5. Dashboard */}
-    {currentStep === 'dashboard' && (
-      <Dashboard
-        onFeatureClick={(feature) => {
-          if (feature === 'chat') {
-            setCurrentStep('chat');
-          }
-        }}
-      />
-    )}
+      {/* 5. Dashboard */}
+      {currentStep === 'dashboard' && (
+        <Dashboard
+          onFeatureClick={(feature) => {
+            if (feature === 'chat') {
+              setCurrentStep('chat');
+            }
+            if (feature === 'music') {  
+              setCurrentStep('musik');
+            }
+          }}
+        />
+      )}
 
-    {/* 6. Chat */}
-    {currentStep === 'chat' && (
-      <Chatbox 
-        onBack={() => setCurrentStep('dashboard')} 
-      />
-    )}
+      {/* 6. Chat */}
+      {currentStep === 'chat' && (
+        <Chatbox 
+          onBack={() => setCurrentStep('dashboard')} 
+        />
+      )}
+
+      {/* 7. Musik */}                
+      {currentStep === 'musik' && (
+        <Musik 
+          onBack={() => setCurrentStep('dashboard')} 
+        />
+      )}
     </MobileContainer>
   );
 }
