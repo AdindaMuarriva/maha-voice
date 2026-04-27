@@ -10,6 +10,7 @@ import Screening from './pages/mahasiswa/Screening';
 import Result from './pages/mahasiswa/Result';
 import Musik from './pages/mahasiswa/Musik';
 import Riwayat from './pages/mahasiswa/Riwayat';
+<<<<<<< dio
 import Dashboard_Admin from './pages/auth/Admin/Dashboard_Admin';
 import Daftar_Users from './pages/auth/Admin/Daftar_Users';
 import Hasil_Screening from './pages/auth/Admin/Hasil_Screening';
@@ -17,9 +18,12 @@ import Pertanyaan_Screening from './pages/auth/Admin/Pertanyaan_Screening';
 import Rekomendasi from './pages/auth/Admin/Rekomendasi';
 import TipsAndMusic from './pages/auth/Admin/Tips dan Music';
 import { saveScreeningResult } from './services/adminApi';
+=======
+import AdminLogin from './pages/admin/AdminLogin';
+>>>>>>> main
 
 function App() {
-  const [currentStep, setCurrentStep] = useState('splash');
+  const [currentStep, setCurrentStep] = useState('admin-login');
   const [score, setScore] = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
   const [adminPage, setAdminPage] = useState('dashboard');
@@ -52,6 +56,21 @@ function App() {
     return (
       <div style={{ minHeight: '100vh', width: '100%', background: '#f3f6fa' }}>
         {renderAdminPage()}
+      </div>
+    );
+  }
+
+  if (currentStep?.startsWith('admin')) {
+    return (
+      <div className="w-full h-screen">
+        {currentStep === 'admin-login' && (
+          <AdminLogin onAdminLogin={() => setCurrentStep('admin-dashboard')} />
+        )}
+        {currentStep === 'admin-dashboard' && (
+          <div className="flex items-center justify-center h-full text-4xl font-bold text-[#3C7A92]">
+            Dashboard Admin MahaVoice
+          </div>
+        )}
       </div>
     );
   }
