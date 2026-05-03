@@ -1,25 +1,66 @@
+import { useEffect, useMemo, useState } from 'react';
 import resultBg from '../../assets/instructionbg.png';
 import sadRobot from '../../assets/sad.png';
+import { getRecommendationByLevel } from '../../services/adminApi';
 
-const Result = ({ score = 0, onBack }) => {
+const Result = ({ score = 0, totalScore = 40, onBack }) => {
 
-  const maxScore = 40;
-  const percentage = (score / maxScore) * 100;
+  const safeTotalScore = Math.max(Number(totalScore) || 40, 1);
+  const percentage = Math.min((score / safeTotalScore) * 100, 100);
 
   const getCategory = () => {
-    if (score <= 13) return { label: 'Stres Ringan', color: '#22c55e' };
-    if (score <= 26) return { label: 'Stres Sedang', color: '#f59e0b' };
+    if (percentage <= 33) return { label: 'Stres Ringan', color: '#22c55e' };
+    if (percentage <= 66) return { label: 'Stres Sedang', color: '#f59e0b' };
     return { label: 'Stres Berat', color: '#ef4444' };
   };
 
   const category = getCategory();
 
-  const suggestions = [
+  const recommendationLevel = useMemo(() => {
+    if (category.label === 'Stres Ringan') return 'Rendah';
+    if (category.label === 'Stres Sedang') return 'Sedang';
+    return 'Berat';
+  }, [category.label]);
+
+  const [recommendation, setRecommendation] = useState(null);
+  const [loadingRecommendation, setLoadingRecommendation] = useState(true);
+  const [recommendationError, setRecommendationError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+
+    const loadRecommendation = async () => {
+      try {
+        setLoadingRecommendation(true);
+        const result = await getRecommendationByLevel(recommendationLevel);
+        if (!active) return;
+        setRecommendation(result?.recommendation || null);
+        setRecommendationError('');
+      } catch (error) {
+        if (active) {
+          setRecommendation(null);
+          setRecommendationError(error.message || 'Gagal memuat rekomendasi');
+        }
+      } finally {
+        if (active) setLoadingRecommendation(false);
+      }
+    };
+
+    loadRecommendation();
+
+    return () => {
+      active = false;
+    };
+  }, [recommendationLevel]);
+
+  const fallbackSuggestions = [
     'Hubungi konselor atau psikolog',
     'Cerita ke orang yang kamu percaya',
     'Kurangi beban aktivitas sementara',
-    'Lakukan latihan napas sederhana'
+    'Lakukan latihan napas sederhana',
   ];
+
+  const recommendationItems = recommendation?.items?.length ? recommendation.items : fallbackSuggestions;
 
   const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   const currentMonth = new Date().getMonth(); 
@@ -54,7 +95,7 @@ const Result = ({ score = 0, onBack }) => {
         }
 
         .rs-overlay {
-          background: rgba(255,255,255,0.8);s
+          background: rgba(255,255,255,0.8);
           min-height: 100%;
           padding: 20px;
         }
@@ -126,6 +167,18 @@ const Result = ({ score = 0, onBack }) => {
           transform: scale(1.1);
           background: #2f6478;
         }
+
+        .recommendation-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 12px;
+          border-radius: 999px;
+          background: #E1F0F6;
+          color: #3C7A92;
+          font-size: 12px;
+          font-weight: 700;
+        }
       `}</style>
 
       <div className="rs-root">
@@ -151,7 +204,7 @@ const Result = ({ score = 0, onBack }) => {
             {/* RIGHT */}
             <div className="card" style={{ flex: 2 }}>
               <h2 style={{ fontSize: 30, margin: 0, color: category.color }}>
-                {score}<span style={{ fontSize: 16 }}>/40</span>
+                {score}<span style={{ fontSize: 16 }}>{`/${safeTotalScore}`}</span>
               </h2>
 
               <p style={{ fontSize: 12, margin: '6px 0' }}>
@@ -206,6 +259,26 @@ const Result = ({ score = 0, onBack }) => {
             </h3>
 
             <div className="card" style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 10 }}>
+              <span className="recommendation-badge">
+                {recommendation?.title || category.label}
+              </span>
+              {recommendation?.description && (
+                <p style={{ margin: '8px 0 0', fontSize: 12, color: '#64748b', lineHeight: 1.6 }}>
+                  {recommendation.description}
+                </p>
+              )}
+              {loadingRecommendation && (
+                <p style={{ margin: '8px 0 0', fontSize: 12, color: '#64748b' }}>
+                  Memuat rekomendasi...
+                </p>
+              )}
+              {recommendationError && !loadingRecommendation && (
+                <p style={{ margin: '8px 0 0', fontSize: 12, color: '#b45309' }}>
+                  {recommendationError}
+                </p>
+              )}
+            </div>
             <ul
                 style={{
                 listStyle: 'none',
@@ -213,7 +286,7 @@ const Result = ({ score = 0, onBack }) => {
                 margin: 0
                 }}
             >
-                {suggestions.map((s, i) => (
+                {recommendationItems.map((s, i) => (
                 <li
                     key={i}
                     style={{
