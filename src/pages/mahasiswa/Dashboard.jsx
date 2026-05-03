@@ -1,126 +1,161 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import dashboardBg from '../../assets/dashboardbg.png';
 import headRobot from '../../assets/head.png';
 import screeningRobot from '../../assets/robot_onboarding2.png';
 import profileIcon from '../../assets/profile.png';
+import { getAllTips } from '../../services/tipsApi';
+import { getLatestUserScreening } from '../../services/adminApi';
 
 // ─────────────────────────────────────────────
 // DATA
 // ─────────────────────────────────────────────
-const FEATURES = [
-  {
-    id: 'chat',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-          stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-        <circle cx="9" cy="10" r="1" fill="currentColor"/>
-        <circle cx="12" cy="10" r="1" fill="currentColor"/>
-        <circle cx="15" cy="10" r="1" fill="currentColor"/>
-      </svg>
-    ),
-    label: 'Mulai Chat',
-    desc: 'Yuk ngobrol bebas sama Hava!',
-    filled: true,
-  },
-  {
-    id: 'screening',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
-          stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-        <rect x="9" y="3" width="6" height="4" rx="1" stroke="currentColor" strokeWidth="1.8"/>
-        <path d="M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-        <path d="M16 16l2 2 3-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    label: 'Screening',
-    desc: 'Cek tingkat stresmu di sini.',
-    filled: false,
-  },
-  {
-    id: 'history',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-        <path d="M12 8v4l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M3.05 11a9 9 0 1 0 .5-4M3 7v4h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    label: 'Riwayat',
-    desc: 'Lihat riwayat dan perkembanganmu.',
-    filled: false,
-  },
-  {
-    id: 'music',
-    icon: (
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-        <path d="M9 18V5l12-2v13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-        <circle cx="6" cy="18" r="3" stroke="currentColor" strokeWidth="1.8"/>
-        <circle cx="18" cy="16" r="3" stroke="currentColor" strokeWidth="1.8"/>
-      </svg>
-    ),
-    label: 'Musik',
-    desc: 'Dengarkan lagu pereda stres di sini.',
-    filled: true,
-  },
-];
-
-const CATEGORIES = ['Semua', 'Fokus Belajar', 'Tidur Sehat', 'Relaksasi'];
-
-const SARAN_DATA = [
-  {
-    id: 1, category: 'Relaksasi', tag: 'Relaksasi',
-    title: '5 Teknik Napas Redakan Panik',
-    desc: 'Latihan pernapasan dalam terbukti menurunkan detak jantung dan kecemasan dalam beberapa menit.',
-    imgBg: 'linear-gradient(135deg, #8CC7C4 0%, #7AB2B2 100%)',
-    tagBg: 'rgba(255,255,255,0.88)', tagColor: '#09637E', linkColor: '#09637E',
-  },
-  {
-    id: 2, category: 'Tidur Sehat', tag: 'Tidur',
-    title: 'Hindari Gadget Sebelum Tidur',
-    desc: 'Paparan layar menghambat produksi hormon tidur (melatonin).',
-    imgBg: 'linear-gradient(135deg, #7AB2B2 0%, #088395 100%)',
-    tagBg: 'rgba(255,255,255,0.88)', tagColor: '#09637E', linkColor: '#09637E',
-  },
-  {
-    id: 3, category: 'Fokus Belajar', tag: 'Fokus Belajar',
-    title: 'Teknik Pomodoro untuk Belajar',
-    desc: 'Belajar 25 menit lalu istirahat 5 menit terbukti meningkatkan konsentrasi dan produktivitas.',
-    imgBg: 'linear-gradient(135deg, #088395 0%, #09637E 100%)',
-    tagBg: 'rgba(255,255,255,0.88)', tagColor: '#09637E', linkColor: '#088395',
-  },
-  {
-    id: 4, category: 'Relaksasi', tag: 'Relaksasi',
-    title: 'Meditasi 5 Menit Setiap Pagi',
-    desc: 'Meditasi singkat di pagi hari membantu menenangkan pikiran dan menyiapkan mental lebih positif.',
-    imgBg: 'linear-gradient(135deg, #8CC7C4 0%, #7AB2B2 100%)',
-    tagBg: 'rgba(255,255,255,0.88)', tagColor: '#09637E', linkColor: '#09637E',
-  },
-  {
-    id: 5, category: 'Tidur Sehat', tag: 'Tidur',
-    title: 'Jadwal Tidur Konsisten',
-    desc: 'Tidur dan bangun di jam yang sama setiap hari membantu ritme sirkadian tubuhmu.',
-    imgBg: 'linear-gradient(135deg, #7AB2B2 0%, #088395 100%)',
-    tagBg: 'rgba(255,255,255,0.88)', tagColor: '#09637E', linkColor: '#09637E',
-  },
-  {
-    id: 6, category: 'Fokus Belajar', tag: 'Fokus Belajar',
-    title: 'Catat dengan Metode Cornell',
-    desc: 'Metode pencatatan terstruktur membantu otak memproses dan mengingat informasi lebih efektif.',
-    imgBg: 'linear-gradient(135deg, #088395 0%, #09637E 100%)',
-    tagBg: 'rgba(255,255,255,0.88)', tagColor: '#09637E', linkColor: '#088395',
-  },
-];
+// keep icons separately to reuse when building translated FEATURES
+const ICONS = {
+  chat: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+        stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="9" cy="10" r="1" fill="currentColor"/>
+      <circle cx="12" cy="10" r="1" fill="currentColor"/>
+      <circle cx="15" cy="10" r="1" fill="currentColor"/>
+    </svg>
+  ),
+  screening: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
+        stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <rect x="9" y="3" width="6" height="4" rx="1" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M9 12h6M9 16h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M16 16l2 2 3-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+  history: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <path d="M12 8v4l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M3.05 11a9 9 0 1 0 .5-4M3 7v4h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
+  music: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <path d="M9 18V5l12-2v13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="6" cy="18" r="3" stroke="currentColor" strokeWidth="1.8"/>
+      <circle cx="18" cy="16" r="3" stroke="currentColor" strokeWidth="1.8"/>
+    </svg>
+  )
+};
 
 // ─────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────
-const Dashboard = ({ userName = 'Adinda Muarriva', onFeatureClick, onProfileClick }) => {
+const Dashboard = ({ userName = 'Adinda Muarriva', currentUser, onFeatureClick, onProfileClick, onTipSelect }) => {
   const [activeCategory, setActiveCategory] = useState('Semua');
+  const [tips, setTips] = useState([]);
+  const [tipsLoading, setTipsLoading] = useState(true);
+  const [latestScreening, setLatestScreening] = useState(null);
+  const { t } = useTranslation();
+
+  const FEATURES = [
+    { id: 'chat', icon: ICONS.chat, filled: true, label: t('dashboard.features.chat.label'), desc: t('dashboard.features.chat.desc') },
+    { id: 'screening', icon: ICONS.screening, filled: false, label: t('dashboard.features.screening.label') || t('dashboard.features.screening.label'), desc: t('dashboard.features.screening.desc') },
+    { id: 'history', icon: ICONS.history, filled: false, label: t('dashboard.features.history.label'), desc: t('dashboard.features.history.desc') },
+    { id: 'music', icon: ICONS.music, filled: true, label: t('dashboard.features.music.label'), desc: t('dashboard.features.music.desc') },
+  ];
+
+  const CATEGORIES = t('dashboard.categories', { returnObjects: true }) || ['Semua', 'Fokus Belajar', 'Tidur Sehat', 'Relaksasi'];
+
+  // Helper: Map score to stress level
+  const getStressLevel = (score) => {
+    if (score <= 10) return 'Minimal';
+    if (score <= 20) return 'Ringan';
+    if (score <= 30) return 'Sedang';
+    return 'Berat';
+  };
+
+  // Helper: Calculate days ago
+  const getDaysAgo = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const days = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+      if (days === 0) return 'Hari ini';
+      if (days === 1) return '1 hari yang lalu';
+      return `${days} hari yang lalu`;
+    } catch {
+      return '';
+    }
+  };
+
+  // Fetch latest screening
+  useEffect(() => {
+    const fetchLatestScreening = async () => {
+      if (!currentUser?.id_user && !currentUser?.id) return;
+      try {
+        const userId = currentUser?.id_user || currentUser?.id;
+        const result = await getLatestUserScreening(userId);
+        setLatestScreening(result);
+      } catch (error) {
+        console.error('Error fetching latest screening:', error);
+        setLatestScreening(null);
+      }
+    };
+    fetchLatestScreening();
+  }, [currentUser]);
+
+  // Fetch tips from database and refresh periodically for near-realtime updates
+  useEffect(() => {
+    let isMounted = true;
+    const fetchTips = async () => {
+      try {
+        setTipsLoading(true);
+        const response = await getAllTips();
+        if (!isMounted) return;
+        setTips(Array.isArray(response) ? response : []);
+      } catch (error) {
+        console.error('Error fetching tips:', error);
+        if (!isMounted) return;
+        setTips([]);
+      } finally {
+        if (!isMounted) return;
+        setTipsLoading(false);
+      }
+    };
+
+    fetchTips();
+    const intervalId = setInterval(fetchTips, 15000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  // Map database tips to display format
+  const getDisplayColor = (category) => {
+    const colors = {
+      'Relaksasi': { imgBg: 'linear-gradient(135deg, #8CC7C4 0%, #7AB2B2 100%)', linkColor: '#09637E' },
+      'Tidur Sehat': { imgBg: 'linear-gradient(135deg, #7AB2B2 0%, #088395 100%)', linkColor: '#09637E' },
+      'Fokus Belajar': { imgBg: 'linear-gradient(135deg, #088395 0%, #09637E 100%)', linkColor: '#088395' },
+    };
+    return colors[category] || { imgBg: 'linear-gradient(135deg, #088395 0%, #09637E 100%)', linkColor: '#088395' };
+  };
+
+  const displayTips = tips.map(tip => ({
+    id: tip.id_tips,
+    category: tip.category,
+    tag: tip.category,
+    title: tip.title,
+    desc: tip.description || '',
+    content: tip.content || tip.isi || '',
+    ...getDisplayColor(tip.category),
+    tagBg: 'rgba(255,255,255,0.88)',
+    tagColor: '#09637E',
+  }));
 
   const filteredSaran = activeCategory === 'Semua'
-    ? SARAN_DATA
-    : SARAN_DATA.filter(s => s.category === activeCategory);
+    ? displayTips
+    : displayTips.filter(s => s.category === activeCategory);
 
   return (
     <>
@@ -270,7 +305,7 @@ const Dashboard = ({ userName = 'Adinda Muarriva', onFeatureClick, onProfileClic
                     fontSize: 12,
                     color: '#64748b'
                   }}>
-                    Selamat datang,
+                    {t('dashboard.welcome')}
                   </p>
 
                   <p style={{
@@ -340,7 +375,10 @@ const Dashboard = ({ userName = 'Adinda Muarriva', onFeatureClick, onProfileClic
                     fontWeight: 800,
                     color: '#fff'
                   }}>
-                    18 – Stress Sedang
+                    {latestScreening 
+                      ? `${latestScreening.score} – Stress ${getStressLevel(latestScreening.score)}`
+                      : t('dashboard.noResults')
+                    }
                   </p>
 
                   <p style={{
@@ -348,7 +386,7 @@ const Dashboard = ({ userName = 'Adinda Muarriva', onFeatureClick, onProfileClic
                     fontSize: 12,
                     color: 'rgba(255,255,255,0.7)'
                   }}>
-                    3 hari yang lalu
+                    {latestScreening ? getDaysAgo(latestScreening.created_at) : ''}
                   </p>
                 </div>
 
@@ -371,9 +409,9 @@ const Dashboard = ({ userName = 'Adinda Muarriva', onFeatureClick, onProfileClic
 
           {/* ════ FITUR UTAMA ════ */}
           <div style={{ padding: '0 20px', marginBottom: 26 }}>
-            <h2 style={{ margin: '0 0 14px', fontSize: 20, fontWeight: 800, color: '#1e293b', letterSpacing: -0.3 }}>
-              Fitur Utama
-            </h2>
+              <h2 style={{ margin: '0 0 14px', fontSize: 20, fontWeight: 800, color: '#1e293b', letterSpacing: -0.3 }}>
+                {t('dashboard.featureTitle')}
+              </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {FEATURES.map((f) => (
@@ -420,9 +458,11 @@ const Dashboard = ({ userName = 'Adinda Muarriva', onFeatureClick, onProfileClic
 
           {/* ════ SARAN ════ */}
           <div style={{ padding: '0 20px' }}>
-            <h2 style={{ margin: '0 0 14px', fontSize: 20, fontWeight: 800, color: '#1e293b', letterSpacing: -0.3 }}>
-              Saran
-            </h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#1e293b', letterSpacing: -0.3 }}>
+                  {t('dashboard.suggestionsTitle')}
+                </h2>
+            </div>
 
             {/* Filter chips — scrollable horizontal */}
             <div
@@ -449,10 +489,12 @@ const Dashboard = ({ userName = 'Adinda Muarriva', onFeatureClick, onProfileClic
             {/* Cards grid */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {filteredSaran.map((s, i) => (
-                <div
+                <button
                   key={s.id}
+                  type="button"
+                  onClick={() => onTipSelect?.(s)}
                   className="db-saran-card db-fadein"
-                  style={{ animationDelay: `${i * 60}ms` }}
+                  style={{ animationDelay: `${i * 60}ms`, textAlign: 'left', background: '#fff', border: 'none', padding: 0, cursor: 'pointer' }}
                 >
                   {/* Image area */}
                   <div style={{
@@ -505,25 +547,26 @@ const Dashboard = ({ userName = 'Adinda Muarriva', onFeatureClick, onProfileClic
                     }}>
                       {s.desc}
                     </p>
-                    <button
+                    <div
                       style={{
-                        background: 'none', border: 'none', padding: 0,
-                        fontSize: 10.5, fontWeight: 600,
-                        color: s.linkColor, cursor: 'pointer',
+                        marginTop: 10,
+                        fontSize: 10.5,
+                        fontWeight: 600,
+                        color: s.linkColor,
                         fontFamily: 'Poppins, sans-serif',
-                        textDecoration: 'none',
                       }}
                     >
-                      Selengkapnya &rsaquo;
-                    </button>
+                      {t('dashboard.readMore')}
+                    </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
 
         </div>
       </div>
+
     </>
   );
 };
