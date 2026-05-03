@@ -14,7 +14,6 @@ import Screening from './pages/mahasiswa/Screening';
 import Result from './pages/mahasiswa/Result';
 import Musik from './pages/mahasiswa/Musik';
 import Riwayat from './pages/mahasiswa/Riwayat';
-<<<<<<< dio
 import Dashboard_Admin from './pages/auth/Admin/Dashboard_Admin';
 import Daftar_Users from './pages/auth/Admin/Daftar_Users';
 import Hasil_Screening from './pages/auth/Admin/Hasil_Screening';
@@ -22,9 +21,6 @@ import Pertanyaan_Screening from './pages/auth/Admin/Pertanyaan_Screening';
 import Rekomendasi from './pages/auth/Admin/Rekomendasi';
 import TipsAndMusic from './pages/auth/Admin/Tips dan Music';
 import { saveScreeningResult } from './services/adminApi';
-=======
-import AdminLogin from './pages/admin/AdminLogin';
->>>>>>> main
 
 function App() {
   const [currentStep, setCurrentStep] = useState('admin-login');
