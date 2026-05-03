@@ -1,11 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import instructionBg from '../../assets/instructionbg.png';
-import questionRobot from '../../assets/questioning.png';
+import { getScreeningQuestions } from '../../services/adminApi';
 
-// ─────────────────────────────────────────────
-// 10 PERTANYAAN PSS-10
-// ─────────────────────────────────────────────
-const QUESTIONS = [
+const DEFAULT_QUESTIONS = [
   "Dalam satu bulan terakhir, seberapa sering kamu merasa kesulitan mengendalikan hal-hal penting dalam kehidupan perkuliahanmu?",
   "Seberapa sering kamu merasa gelisah atau cemas berlebihan mengenai tugas-tugas yang belum selesai?",
   "Seberapa sering kamu merasa tidak mampu menangani tanggung jawab yang diberikan di organisasi atau kelas?",
@@ -18,6 +15,28 @@ const QUESTIONS = [
   "Seberapa sering kamu merasa bahwa tekanan dari perkuliahan membuatmu sulit menikmati waktu luangmu?",
 ];
 
+const normalizeQuestion = (question, index) => {
+  if (typeof question === 'string') {
+    return {
+      id_question: `default-${index + 1}`,
+      question_text: question,
+      weight: 1,
+      sort_order: index + 1,
+      is_active: true,
+    };
+  }
+
+  const weight = Number(question?.weight);
+
+  return {
+    id_question: question?.id_question || `question-${index + 1}`,
+    question_text: question?.question_text || question?.text || DEFAULT_QUESTIONS[index] || `Pertanyaan ${index + 1}`,
+    weight: Number.isFinite(weight) ? Math.min(Math.max(Math.trunc(weight), 1), 4) : 1,
+    sort_order: Number.isFinite(Number(question?.sort_order)) ? Number(question.sort_order) : index + 1,
+    is_active: question?.is_active ?? true,
+  };
+};
+
 const OPTIONS = [
   { label: "Tidak Pernah", value: 0 },
   { label: "Jarang",       value: 1 },
@@ -25,6 +44,15 @@ const OPTIONS = [
   { label: "Sering",       value: 3 },
   { label: "Selalu",       value: 4 },
 ];
+
+const shuffleArray = (items = []) => {
+  const next = [...items];
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const randomIndex = Math.floor(Math.random() * (i + 1));
+    [next[i], next[randomIndex]] = [next[randomIndex], next[i]];
+  }
+  return next;
+};
 
 // ─────────────────────────────────────────────
 // MAIN COMPONENT
@@ -34,18 +62,89 @@ const Screening = ({ onBack, onFinish }) => {
   const [currentQ, setCurrentQ]   = useState(0);
   const [scores, setScores]       = useState([]);
   const [selectedOpt, setSelectedOpt] = useState(null);
+  const [questions, setQuestions] = useState(DEFAULT_QUESTIONS.map(normalizeQuestion));
+  const [loadingQuestions, setLoadingQuestions] = useState(true);
+  const [questionError, setQuestionError] = useState('');
 
   const handleStart = () => setStep('quiz');
 
+  useEffect(() => {
+    let active = true;
+
+    const loadQuestions = async () => {
+      try {
+        setLoadingQuestions(true);
+        const result = await getScreeningQuestions();
+        const apiQuestions = Array.isArray(result?.questions) ? result.questions : [];
+
+        if (!active) {
+          return;
+        }
+
+        if (apiQuestions.length) {
+          const normalized = apiQuestions
+            .map((question, index) => normalizeQuestion(question, index))
+            .sort((a, b) => {
+              if (a.sort_order !== b.sort_order) {
+                return a.sort_order - b.sort_order;
+              }
+              return String(a.id_question).localeCompare(String(b.id_question));
+            });
+
+          setQuestions(shuffleArray(normalized));
+          setQuestionError('');
+        } else {
+          setQuestions(shuffleArray(DEFAULT_QUESTIONS.map(normalizeQuestion)));
+          setQuestionError('Belum ada pertanyaan di database, jadi Hava memakai pertanyaan bawaan dulu.');
+        }
+      } catch (error) {
+        if (!active) {
+          return;
+        }
+
+        setQuestions(shuffleArray(DEFAULT_QUESTIONS.map(normalizeQuestion)));
+        setQuestionError('Gagal memuat pertanyaan dari backend, jadi Hava memakai pertanyaan bawaan dulu.');
+      } finally {
+        if (active) {
+          setLoadingQuestions(false);
+        }
+      }
+    };
+
+    loadQuestions();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const activeQuestions = questions.length ? questions : DEFAULT_QUESTIONS.map(normalizeQuestion);
+
   const handleNext = () => {
     if (selectedOpt === null) return;
-    const newScores = [...scores, selectedOpt];
+    const currentQuestion = activeQuestions[currentQ];
+    const questionWeight = currentQuestion?.weight || 1;
+    const weightedScore = selectedOpt * questionWeight;
+    const answerEntry = {
+      id_question: currentQuestion?.id_question,
+      question_text: currentQuestion?.question_text,
+      selected_value: selectedOpt,
+      weight: questionWeight,
+      score: weightedScore,
+    };
+    const newScores = [...scores, answerEntry];
     setScores(newScores);
     setSelectedOpt(null);
-    if (currentQ < QUESTIONS.length - 1) {
+    if (currentQ < activeQuestions.length - 1) {
       setCurrentQ(prev => prev + 1);
     } else {
-      onFinish?.(newScores.reduce((a, b) => a + b, 0));
+      const totalScore = newScores.reduce((sum, item) => sum + item.score, 0);
+      const totalPossibleScore = activeQuestions.reduce((sum, item) => sum + (Number(item.weight) || 1) * 4, 0);
+      onFinish?.({
+        score: totalScore,
+        totalScore: totalPossibleScore || 40,
+        answers: newScores,
+      });
     }
   };
 
@@ -230,11 +329,16 @@ const Screening = ({ onBack, onFinish }) => {
                 <p style={{ margin: 0, fontSize: 12, color: '#3C7A92', fontWeight: 500, lineHeight: 1.6 }}>
                   Jawaban kamu bersifat rahasia dan hanya digunakan untuk keperluan screening, bukan dibagikan ke pihak lain.
                 </p>
+                {questionError && (
+                  <p style={{ margin: '8px 0 0', fontSize: 11.5, color: '#b45309', lineHeight: 1.5 }}>
+                    {questionError}
+                  </p>
+                )}
               </div>
 
               {/* CTA */}
               <button className="sc-btn" onClick={handleStart} style={{ marginBottom: 20 }}>
-                Mulai Screening Stress
+                {loadingQuestions ? 'Menyiapkan Pertanyaan...' : 'Mulai Screening Stress'}
               </button>
 
             </div>
@@ -252,7 +356,7 @@ const Screening = ({ onBack, onFinish }) => {
                   Screening Stress
                 </h2>
                 <span style={{ fontSize: 12, fontWeight: 600, color: '#3C7A92' }}>
-                  Pertanyaan {currentQ + 1}/10
+                  Pertanyaan {currentQ + 1}/{activeQuestions.length}
                 </span>
               </div>
 
@@ -264,7 +368,7 @@ const Screening = ({ onBack, onFinish }) => {
                 <div style={{
                   height: '100%', borderRadius: 999,
                   background: 'linear-gradient(90deg, #5BB0C5, #3C7A92)',
-                  width: `${((currentQ + 1) / 10) * 100}%`,
+                  width: `${((currentQ + 1) / Math.max(activeQuestions.length, 1)) * 100}%`,
                   transition: 'width 0.4s ease',
                 }} />
               </div>
@@ -284,7 +388,7 @@ const Screening = ({ onBack, onFinish }) => {
                   margin: '0 0 8px', fontSize: 14, fontWeight: 700,
                   color: '#3C7A92', lineHeight: 1.6,
                 }}>
-                  {QUESTIONS[currentQ % QUESTIONS.length]}
+                  {activeQuestions[currentQ % activeQuestions.length]?.question_text}
                 </p>
 
                 {/* Hint */}

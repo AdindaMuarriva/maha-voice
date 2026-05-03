@@ -1,23 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import bgRiwayat from '../../assets/bgriwayat.png';
+import { getUserScreeningHistory } from '../../services/adminApi';
 
-// ─────────────────────────────────────────────
-// DATA DUMMY
 // ─────────────────────────────────────────────
 const CATEGORIES = ['Semua', 'Rendah', 'Sedang', 'Berat'];
-
-const RIWAYAT_DATA = [
-  { id: 1, tanggal: '12', bulan: 'Mar', label: 'Stres Berat',   skor: 35, total: 40, level: 'Berat' },
-  { id: 2, tanggal: '22', bulan: 'Feb', label: 'Stres Berat',   skor: 37, total: 40, level: 'Berat' },
-  { id: 3, tanggal: '13', bulan: 'Jan', label: 'Stres Sedang',  skor: 26, total: 40, level: 'Sedang' },
-  { id: 4, tanggal: '31', bulan: 'Des', label: 'Stres Sedang',  skor: 22, total: 40, level: 'Sedang' },
-  { id: 5, tanggal: '1',  bulan: 'Des', label: 'Stres Ringan',  skor: 12, total: 40, level: 'Rendah' },
-  { id: 6, tanggal: '15', bulan: 'Nov', label: 'Stres Berat',   skor: 38, total: 40, level: 'Berat' },
-  { id: 7, tanggal: '3',  bulan: 'Nov', label: 'Stres Sedang',  skor: 20, total: 40, level: 'Sedang' },
-  { id: 8, tanggal: '28', bulan: 'Okt', label: 'Stres Ringan',  skor: 8,  total: 40, level: 'Rendah' },
-  { id: 9, tanggal: '10', bulan: 'Okt', label: 'Stres Ringan',  skor: 10, total: 40, level: 'Rendah' },
-  { id: 10, tanggal: '5', bulan: 'Sep', label: 'Stres Sedang',  skor: 24, total: 40, level: 'Sedang' },
-];
 
 const LEVEL_STYLE = {
   Berat:  { bg: '#FDDCDC', color: '#E05C5C', dot: '#E05C5C' },
@@ -25,15 +11,82 @@ const LEVEL_STYLE = {
   Rendah: { bg: '#D6EEF8', color: '#3A8FB5', dot: '#4AAAD0' },
 };
 
+const mapHistoryItem = (item) => {
+  const date = item?.tanggal ? new Date(item.tanggal) : new Date();
+  const isValidDate = !Number.isNaN(date.getTime());
+
+  return {
+    id: item?.id_riwayat || `${item?.id_hasil || 'history'}-${item?.tanggal || Date.now()}`,
+    tanggal: isValidDate ? String(date.getDate()) : '-',
+    bulan: isValidDate
+      ? new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(date)
+      : '-',
+    label: `Stres ${item?.level || 'Rendah'}`,
+    skor: Number(item?.skor) || 0,
+    total: Number(item?.total_score) || 40,
+    level: item?.level || 'Rendah',
+  };
+};
+
 // ─────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────
-const Riwayat = ({ onBack }) => {
+const Riwayat = ({ onBack, currentUser }) => {
   const [activeCategory, setActiveCategory] = useState('Semua');
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const filtered = activeCategory === 'Semua'
-    ? RIWAYAT_DATA
-    : RIWAYAT_DATA.filter(r => r.level === activeCategory);
+  useEffect(() => {
+    let active = true;
+
+    const loadHistory = async () => {
+      const userId = currentUser?.id_user;
+
+      if (!userId) {
+        if (active) {
+          setHistory([]);
+          setLoading(false);
+          setError('User belum login, riwayat belum bisa ditampilkan.');
+        }
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const result = await getUserScreeningHistory(userId);
+        const histories = Array.isArray(result?.histories) ? result.histories : [];
+
+        if (!active) {
+          return;
+        }
+
+        setHistory(histories.map(mapHistoryItem));
+        setError('');
+      } catch (err) {
+        if (active) {
+          setHistory([]);
+          setError(err.message || 'Gagal memuat riwayat screening');
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadHistory();
+
+    return () => {
+      active = false;
+    };
+  }, [currentUser?.id_user]);
+
+  const filtered = useMemo(() => (
+    activeCategory === 'Semua'
+      ? history
+      : history.filter((item) => item.level === activeCategory)
+  ), [activeCategory, history]);
 
   return (
     <>
@@ -180,7 +233,15 @@ const Riwayat = ({ onBack }) => {
 
           {/* ════ LIST ════ */}
           <div style={{ background: 'rgba(255,255,255,0.75)', borderRadius: 16, padding: '0 16px', backdropFilter: 'blur(6px)' }}>
-            {filtered.length === 0 ? (
+            {loading ? (
+              <p style={{ textAlign: 'center', color: '#64748b', padding: '32px 0', fontSize: 14 }}>
+                Memuat riwayat screening...
+              </p>
+            ) : error ? (
+              <p style={{ textAlign: 'center', color: '#b91c1c', padding: '32px 0', fontSize: 14 }}>
+                {error}
+              </p>
+            ) : filtered.length === 0 ? (
               <p style={{ textAlign: 'center', color: '#94a3b8', padding: '32px 0', fontSize: 14 }}>
                 Tidak ada data untuk kategori ini.
               </p>
