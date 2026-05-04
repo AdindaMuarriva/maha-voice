@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import MobileContainer from './components/MobileContainer';
-import AdminLogin from './pages/admin/AdminLogin';
 import SplashScreen from './pages/auth/SplashScreen';
 import Onboarding from './pages/auth/Onboarding';
 import Login from './pages/auth/Login';
@@ -15,68 +14,14 @@ import Screening from './pages/mahasiswa/Screening';
 import Result from './pages/mahasiswa/Result';
 import Musik from './pages/mahasiswa/Musik';
 import Riwayat from './pages/mahasiswa/Riwayat';
-import Dashboard_Admin from './pages/auth/Admin/Dashboard_Admin';
-import Daftar_Users from './pages/auth/Admin/Daftar_Users';
-import Hasil_Screening from './pages/auth/Admin/Hasil_Screening';
-import Pertanyaan_Screening from './pages/auth/Admin/Pertanyaan_Screening';
-import Rekomendasi from './pages/auth/Admin/Rekomendasi';
-import TipsAndMusic from './pages/auth/Admin/Tips dan Music';
 import { saveScreeningResult } from './services/adminApi';
 
 function App() {
-  const [currentStep, setCurrentStep] = useState('admin-login');
+  const [currentStep, setCurrentStep] = useState('splash');
   const [score, setScore] = useState(0);
   const [totalScore, setTotalScore] = useState(40);
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedTip, setSelectedTip] = useState(null);
-  const [adminPage, setAdminPage] = useState('dashboard');
-
-  const renderAdminPage = () => {
-    if (adminPage === 'dashboard') {
-      return <Dashboard_Admin onNavigate={setAdminPage} />;
-    }
-
-    if (adminPage === 'users') {
-      return <Daftar_Users onNavigate={setAdminPage} />;
-    }
-
-    if (adminPage === 'results') {
-      return <Hasil_Screening onNavigate={setAdminPage} />;
-    }
-
-    if (adminPage === 'questions') {
-      return <Pertanyaan_Screening onNavigate={setAdminPage} />;
-    }
-
-    if (adminPage === 'recommendation') {
-      return <Rekomendasi onNavigate={setAdminPage} />;
-    }
-
-    return <TipsAndMusic onNavigate={setAdminPage} />;
-  };
-
-  if (currentStep === 'admin-dashboard') {
-    return (
-      <div style={{ minHeight: '100vh', width: '100%', background: '#f3f6fa' }}>
-        {renderAdminPage()}
-      </div>
-    );
-  }
-
-  if (currentStep?.startsWith('admin')) {
-    return (
-      <div className="w-full h-screen">
-        {currentStep === 'admin-login' && (
-          <AdminLogin onAdminLogin={() => setCurrentStep('admin-dashboard')} />
-        )}
-        {currentStep === 'admin-dashboard' && (
-          <div className="flex items-center justify-center h-full text-4xl font-bold text-[#3C7A92]">
-            Dashboard Admin MahaVoice
-          </div>
-        )}
-      </div>
-    );
-  }
 
   return (
     <MobileContainer>
@@ -107,13 +52,6 @@ function App() {
 
             const role = loginResult?.role || account?.role || 'user';
             setCurrentUser({ ...account, role });
-
-            if (role === 'admin') {
-              setAdminPage('dashboard');
-              setCurrentStep('admin-dashboard');
-              return;
-            }
-
             setCurrentStep('dashboard');
           }} 
         />
