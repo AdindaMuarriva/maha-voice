@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import MobileContainer from './components/MobileContainer';
+import AdminLogin from './pages/admin/AdminLogin';
 import SplashScreen from './pages/auth/SplashScreen';
 import Onboarding from './pages/auth/Onboarding';
 import Login from './pages/auth/Login';
